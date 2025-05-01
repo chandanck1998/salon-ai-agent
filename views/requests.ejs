@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Help Requests</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f4f4f9;
+      color: #333;
+    }
+
+    h1 {
+      color: #0056b3;
+    }
+
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    li {
+      background-color: #fff;
+      margin: 10px 0;
+      padding: 15px;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+
+    input[type="text"] {
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background-color: #0056b3;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #004080;
+    }
+
+    a {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #0056b3;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 5px;
+    }
+
+    a:hover {
+      background-color: #004080;
+    }
+
+    .status {
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.9em;
+      color: #fff;
+      display: inline-block;
+      margin-bottom: 4px;
+    }
+
+    .Pending {
+      background-color: #f0ad4e;
+    }
+
+    .Resolved {
+      background-color: #5cb85c;
+    }
+
+    .Unresolved {
+      background-color: #d9534f;
+    }
+  </style>
+</head>
+
+<body>
+  <div style="display: flex; justify-content: space-between; align-items: center;">
+    <h1>Help Requests</h1>
+    <a href="/supervisor/knowledge-base">View Learned Answers</a>
+  </div>
+  <hr><br>
+
+  <% if (helpRequests.length===0) { %>
+    <p>No requests yet.</p>
+    <% } else { %>
+      <ul>
+        <% helpRequests .sort((a, b)=> new Date(b.createdAt) - new Date(a.createdAt))
+          .forEach(request => { %>
+          <li style="margin-bottom: 16px;">
+            <span class="status <%= request.status %>">
+              <%= request.status %>
+            </span><br />
+            <strong>Question:</strong>
+            <%= request.question %><br />
+              <small>Caller ID: <%= request.callerId %></small><br />
+              <small>Asked At: <%= new Date(request.createdAt).toLocaleString() %></small><br />
+
+              <% if (request.status==='Resolved' ) { %>
+                <strong>Answer:</strong>
+                <%= request.answer %><br />
+                  <small>Resolved At: <%= new Date(request.resolvedAt).toLocaleString() %></small>
+                  <% } else if (request.status==='Unresolved' ) { %>
+                    <small>Unresolved At: <%= new Date(request.unresolvedAt).toLocaleString() %></small>
+                    <% } else if (request.status==='Pending' ) { %>
+                      <form action="/supervisor/answer/<%= request.id %>" method="POST" style="margin-top: 6px;">
+                        <input type="text" name="answer" placeholder="Supervisor answer" required />
+                        <button type="submit">Submit</button>
+                      </form>
+                      <% } %>
+          </li>
+          <% }) %>
+      </ul>
+      <% } %>
+</body>
+
+</html>

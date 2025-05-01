@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Knowledge Base</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f4f4f9;
+      color: #333;
+    }
+    h1 {
+      color: #0056b3;
+    }
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+    li {
+      background-color: #fff;
+      margin: 10px 0;
+      padding: 15px;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    strong {
+      color: #333;
+    }
+    #search {
+      padding: 10px;
+      width: 100%;
+      max-width: 400px;
+      margin-bottom: 20px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    .back-link {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #0056b3;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 5px;
+    }
+    .back-link:hover {
+      background-color: #004080;
+    }
+  </style>
+</head>
+<body>
+  <div style="display: flex; justify-content: space-between; align-items: center;">
+    <h1>Knowledge Base</h1>
+    <a class="back-link" href="/supervisor/requests">View Help Requests</a>
+  </div>
+  <hr><br><br>
+  <input type="text" id="search" placeholder="Search for a question..." oninput="filterAnswers()">
+  <ul id="answers-list">
+    <% knowledgeBase.forEach(item => { %>
+      <li>
+        <strong>Q:</strong> <%= item.question %> <br/><strong>A:</strong> <%= item.answer %>
+      </li>
+    <% }) %>
+  </ul>
+
+  <script>
+    function filterAnswers() {
+      const searchQuery = document.getElementById('search').value.toLowerCase();
+      const answers = document.querySelectorAll('#answers-list li');
+
+      answers.forEach((item) => {
+        const question = item.querySelector('strong').nextSibling.textContent.toLowerCase();
+        if (question.includes(searchQuery)) {
+          item.style.display = 'block';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    }
+  </script>
+</body>
+</html>
