@@ -1,30 +1,32 @@
 const helpRequestModel = require("../models/helpRequest");
 const knowledgeBaseModel = require('../models/knowledgeBase');
 
-// This will auto-mark pending requests that are older than 5 minutes
+// Auto-mark unresolved after 5 minutes
 helpRequestModel.markUnresolvedAfter(5);
 
-exports.viewDashboard = (req, res) => {
-  const helpRequests = helpRequestModel.getAllRequests();
+exports.viewDashboard = async (req, res) => {
+  const helpRequests = await helpRequestModel.getAllRequests();
   res.render("requests", { helpRequests });
 };
 
-exports.submitAnswer = (req, res) => {
+exports.submitAnswer = async (req, res) => {
   const { id } = req.params;
   const { answer } = req.body;
 
-  helpRequestModel.resolveRequest(id, answer);
-  const request = helpRequestModel.getAllRequests().find((r) => r.id === id);
-  if (request) {
-    knowledgeBaseModel.addKnowledge(request.question, answer);
+  await helpRequestModel.resolveRequest(id, answer);
+  const helpRequests = await helpRequestModel.getAllRequests();
+  const request = helpRequests.find(r => r.id === id);
 
+  if (request) {
+    await knowledgeBaseModel.addKnowledge(request.question, answer);
     console.log(`📩 AI follow-up to ${request.callerId}:`);
     console.log(`🗣️  "Thanks for waiting! Here's the answer to your question: '${request.question}' → ${answer}"`);
   }
+
   res.redirect("/supervisor/requests");
 };
 
-exports.viewLearnedAnswers = (req, res) => {
-  const knowledgeBase = knowledgeBaseModel.readData();
+exports.viewLearnedAnswers = async (req, res) => {
+  const knowledgeBase = await knowledgeBaseModel.readData();
   res.render("knowledgeBase", { knowledgeBase });
 };

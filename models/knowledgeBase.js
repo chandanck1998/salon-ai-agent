@@ -1,36 +1,37 @@
-const fs = require('fs');
-const path = require('path');
+const db = require('../firebase');
+const collection = db.collection('knowledgeBase');
+const uuidv4 = require('uuid').v4;
 
-const filePath = path.join(__dirname, '../data/knowledgeBase.json');
-
-// Read knowledge base
-const readData = () => {
-  if (!fs.existsSync(filePath)) return [];
-  const data = fs.readFileSync(filePath);
-  return JSON.parse(data);
+exports.findAnswer = async (question) => {
+  const snapshot = await collection.where('question', '==', question).get();
+  if (snapshot.empty) return null;
+  return snapshot.docs[0].data().answer;
 };
 
-// Write updated knowledge base
-const writeData = (data) => {
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+exports.addKnowledge = async (question, answer) => {
+  const normalizedQuestion = question.trim().toLowerCase();
+  const snapshot = await collection.where('question', '==', normalizedQuestion).get();
+
+  const payload = {
+    question: normalizedQuestion,
+    answer,
+    updatedAt: new Date().toISOString(),
+  };
+
+  if (!snapshot.empty) {
+    const docRef = snapshot.docs[0].ref;
+    await docRef.update(payload);
+  } else {
+    await collection.add({
+      ...payload,
+      id: uuidv4(),
+      createdAt: new Date().toISOString(),
+      source: 'supervisor'
+    });
+  }
 };
 
-// Find an answer
-const findAnswer = (question) => {
-  const knowledge = readData();
-  const found = knowledge.find(q => q.question.toLowerCase() === question.toLowerCase());
-  return found ? found.answer : null;
-};
-
-// Add a new question-answer pair
-const addKnowledge = (question, answer) => {
-  const knowledge = readData();
-  knowledge.push({ question, answer });
-  writeData(knowledge);
-};
-
-module.exports = {
-  findAnswer,
-  addKnowledge,
-  readData,   // ✅ Export this function also!
+exports.readData = async () => {
+  const snapshot = await collection.orderBy('createdAt', 'desc').get();
+  return snapshot.docs.map(doc => doc.data());
 };

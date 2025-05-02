@@ -15,7 +15,7 @@ exports.receiveCall = async (req, res) => {
     const token = await createToken(callerId, "frontdesk-room");
     console.log(`🔑 Generated LiveKit token for callerId ${callerId}: ${token}`);
 
-    const answer = knowledgeBaseModel.findAnswer(question);
+    const answer = await knowledgeBaseModel.findAnswer(question);
 
     if (answer) {
       console.log(`✅ AI Response: ${answer}`);

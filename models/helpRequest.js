@@ -1,21 +1,9 @@
-const fs = require('fs');
-const path = require('path');
+const db = require('../firebase');
 const { v4: uuidv4 } = require('uuid');
 
-const filePath = path.join(__dirname, '../data/helpRequests.json');
+const collection = db.collection('helpRequests');
 
-const readData = () => {
-  if (!fs.existsSync(filePath)) return [];
-  const data = fs.readFileSync(filePath);
-  return JSON.parse(data);
-};
-
-const writeData = (data) => {
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-};
-
-exports.createRequest = (question, callerId) => {
-  const requests = readData();
+exports.createRequest = async (question, callerId) => {
   const newRequest = {
     id: uuidv4(),
     question,
@@ -23,45 +11,50 @@ exports.createRequest = (question, callerId) => {
     status: 'Pending',
     createdAt: new Date().toISOString(),
   };
-  requests.push(newRequest);
-  writeData(requests);
+  await collection.doc(newRequest.id).set(newRequest);
   return newRequest;
 };
 
-exports.resolveRequest = (id, answer) => {
-  const requests = readData();
-  const index = requests.findIndex(r => r.id === id);
-  if (index !== -1) {
-    requests[index].status = 'Resolved';
-    requests[index].resolvedAt = new Date().toISOString();
-    requests[index].answer = answer;
-    writeData(requests);
-    return true;
-  }
-  return false;
+exports.resolveRequest = async (id, answer) => {
+  const doc = collection.doc(id);
+  const snapshot = await doc.get();
+  if (!snapshot.exists) return false;
+
+  await doc.update({
+    status: 'Resolved',
+    resolvedAt: new Date().toISOString(),
+    answer,
+  });
+  return true;
 };
 
-exports.getAllRequests = () => readData();
+exports.getAllRequests = async () => {
+  const snapshot = await collection.get();
+  return snapshot.docs.map(doc => doc.data());
+};
 
-exports.markUnresolvedAfter = (minutes = 5) => {
-  const requests = readData();
+exports.markUnresolvedAfter = async (minutes = 5) => {
   const now = Date.now();
+  const snapshot = await collection.where('status', '==', 'Pending').get();
+
+  const batch = db.batch();
   let updated = false;
 
-  requests.forEach(req => {
-    if (req.status === 'Pending') {
-      const createdAt = new Date(req.createdAt).getTime();
-      const ageInMin = (now - createdAt) / 60000;
-      if (ageInMin >= minutes) {
-        req.status = 'Unresolved';
-        req.unresolvedAt = new Date().toISOString();
-        updated = true;
-      }
+  snapshot.forEach(doc => {
+    const data = doc.data();
+    const createdAt = new Date(data.createdAt).getTime();
+    const ageInMin = (now - createdAt) / 60000;
+    if (ageInMin >= minutes) {
+      batch.update(doc.ref, {
+        status: 'Unresolved',
+        unresolvedAt: new Date().toISOString()
+      });
+      updated = true;
     }
   });
 
   if (updated) {
-    writeData(requests);
+    await batch.commit();
     console.log(`⏱️ Some help requests were auto-marked as 'Unresolved' after ${minutes} mins`);
   }
 };
