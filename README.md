@@ -23,6 +23,16 @@ This project simulates an AI receptionist for a fake salon business. If the AI d
 
 ---
 
+## 📽️ Demo Video
+
+Watch the walkthrough video here:  
+
+Click the link directly:  
+🔗 [Demo Video on Google Drive](https://drive.google.com/file/d/1aDn981bbS9D5-ge0i-m2XmDgsh42U8Rt/view?usp=sharing)
+
+
+---
+
 ## 🏗️ Updated Project Structure
 
 ```

@@ -9,11 +9,11 @@ exports.findAnswer = async (question) => {
 };
 
 exports.addKnowledge = async (question, answer) => {
-  const normalizedQuestion = question.trim().toLowerCase();
-  const snapshot = await collection.where('question', '==', normalizedQuestion).get();
+  const theQuestion = question;
+  const snapshot = await collection.where('question', '==', theQuestion).get();
 
   const payload = {
-    question: normalizedQuestion,
+    question: theQuestion,
     answer,
     updatedAt: new Date().toISOString(),
   };
