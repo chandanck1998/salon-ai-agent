@@ -124,7 +124,6 @@ npm run seed
 node seeders/seedKnowledgeBase.js
 ```
 
-Prevents duplicates using normalized IDs.
 
 ---
 
